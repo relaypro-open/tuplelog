@@ -78,9 +78,13 @@ tuplelog:proplist_format/2 -> io:format/2
 tuplelog:proplist_lib_format/2 -> io_lib:format/2 
 ```
 
-
-The logging output will then be supported. Calling the logger like:
-
+So this log entry:
+```erlang
+Result = "Test",
+?LOG_INFO("Result: ~p", [Result])
+)
+```
+would become:
 ```erlang
 Result = "Test",
 ?LOGT_INFO("Result: ~p", [{result, Result}])
@@ -184,6 +188,10 @@ sed -i 's/\-include_lib(\"kernel\/include\/logger.hrl\")\./-include_lib\(\"kerne
 
 grep -c dog_trainer.hrl *.erl | grep ":2"
 ```
+
+Credits
+-------
+This project was based upon [flatlog](https://github.com/ferd/flatlog)
 
 Roadmap
 -------

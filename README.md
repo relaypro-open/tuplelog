@@ -59,6 +59,26 @@ a custom handler) for structured logging to your `sys.config` file:
 ].
 ```
 
+Next, all files that will call the LOGT_* macros must include tuplelog.hrl:
+```erlang
+-include_lib("tuplelog/include/tuplelog.hrl").
+```
+
+Macros defined are analogs to the standard logger macros, but with a list of tuples as the second parameter:
+```erlang
+?LOG_INFO/2 -> ?LOGT_INFO/2
+?LOG_ERROR/2 -> ?LOGT_ERROR/2
+?LOG_DEBUG/2 -> ?LOGT_DEBUG/2
+```
+
+In addition the following functions are analogs to the standard io format functions, also with a list
+of tuples as the second parameter:
+```erlang
+tuplelog:proplist_format/2 -> io:format/2 
+tuplelog:proplist_lib_format/2 -> io_lib:format/2 
+```
+
+
 The logging output will then be supported. Calling the logger like:
 
 ```erlang
@@ -160,7 +180,7 @@ ast-grep scan -r log_fix.yaml -U
 access to the LOGT macros:
 
 ```bash
-sed -i 's/\-include_lib(\"kernel\/include\/logger.hrl\")\./-include_lib\(\"kernel\/include\/logger.hrl\"\)\.\n-include\(\"tuplelog.hrl\"\)\./g' *.erl
+sed -i 's/\-include_lib(\"kernel\/include\/logger.hrl\")\./-include_lib\(\"kernel\/include\/logger.hrl\"\)\.\n-include_lib\(\"tuplelog/include/tuplelog.hrl\"\)\./g' *.erl
 
 grep -c dog_trainer.hrl *.erl | grep ":2"
 ```

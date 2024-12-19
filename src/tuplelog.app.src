@@ -1,0 +1,15 @@
+{application, tuplelog,
+ [{description, "A collection of macros and a custom formatter for the logger application that turns "
+                "tuples into maps and adds the log template in a key 'log_template'"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache 2.0"]},
+  {links, [{"Github", "https://github.com/relaypro_open/tuplelog/"}]}
+ ]}.

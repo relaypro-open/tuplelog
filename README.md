@@ -1,7 +1,7 @@
 tuplelog
 =====
 
-A macro collection and optional log formatter for the logger application that allows the use of tuples in log statements to provide both human readable and structured logging in one statement.  Works along with other log formatters (like flatlog, logger_formatter_json) to provide structured logging.
+A collection of macros and optional log formatter for the logger application that allows the use of tuples in log statements to provide both human readable and structured logging in one statement.  Works along with other log formatters (like flatlog, logger_formatter_json) to provide structured logging.
 
 Why?
 ----
@@ -104,9 +104,10 @@ can then use this to search for thes log entries in ELK without having to remove
 is not guaranteed to be unique as the combination of MFA + line number, but if it isn't, add MFA
 and/or line number and it will be ;)
 
-If sent to the tuplelog log formatter, this will produce a standard formatted log entry like:
+If sent to the tuplelog log formatter, this use the value of unstructured_log to produce a standard formatted log entry like, along with the template_log:
 ```erlang
 1970-12-12T00:01:20.286786+00:00 [info] <0.PID.0> module:function/arrity:line_number Result: Test
+template_log="Result: $result"
 ```
 
 It can also or instead be sent to a structured log formatter such as json_log_formatter:
@@ -129,55 +130,10 @@ can instead use a tool like ast-grep to search and replace exiting LOG macros:
 2) Add Erlang support:
 https://ast-grep.github.io/advanced/custom-language.html
 https://github.com/WhatsApp/tree-sitter-erlang
-3) Create the following ast-grep rule in a file:
-log_fix.yaml
-```yaml
----
-
-id: log_rewrite
-language: erlang
-# find the target node
-rule:
-  all:
-    - kind: macro_call_expr
-    - pattern: "?$MACRO($FORMAT,$$$TERMS)"
-    - not:
-        has:
-          kind: call    # a sub rule object
-          stopBy: end                  # stopBy accepts 'end', 'neighbor' or another rule object.
-# apply rewriters to sub node
-transform:
-  MACRO_NEW:
-    replace:
-      source: $MACRO
-      replace: "LOG_(?<LEVEL>.*)" 
-      by: LOGP_$LEVEL
-  TUPLES:
-    rewrite:
-      rewriters: [tuple-rewrite]
-      source: $$$TERMS
-# combine and replace
-fix: ?$MACRO_NEW($FORMAT, $TUPLES)
-
-# define rewriters
-rewriters:
-- id: tuple-rewrite
-  rule:
-    pattern: $VARNAME
-    kind: var
-  transform:
-    KEY:
-      convert:
-        source: $VARNAME
-        toCase: snakeCase
-  fix: "{$KEY,$VARNAME}"
-
-```
-
 4) Run this in your source directory: 
 
 ```bash
-ast-grep scan -r log_fix.yaml -U
+ast-grep scan -r $REPO_LOCATION/ast-grep/log_fix.yaml -U
 ```
 
 5) You will need to include tuplelog.hrl anywhere you are currently including logger.hrl to get

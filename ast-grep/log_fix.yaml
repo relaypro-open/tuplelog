@@ -1,0 +1,39 @@
+---
+
+id: log_rewrite
+language: erlang
+# find the target node
+rule:
+  all:
+    - kind: macro_call_expr
+    - pattern: "?$MACRO($FORMAT,$$$TERMS)"
+    - not:
+        has:
+          kind: call    # a sub rule object
+          stopBy: end                  # stopBy accepts 'end', 'neighbor' or another rule object.
+# apply rewriters to sub node
+transform:
+  MACRO_NEW:
+    replace:
+      source: $MACRO
+      replace: "LOG_(?<LEVEL>.*)" 
+      by: LOGT_$LEVEL
+  TUPLES:
+    rewrite:
+      rewriters: [tuple-rewrite]
+      source: $$$TERMS
+# combine and replace
+fix: ?$MACRO_NEW($FORMAT, $TUPLES)
+
+# define rewriters
+rewriters:
+- id: tuple-rewrite
+  rule:
+    pattern: $VARNAME
+    kind: var
+  transform:
+    KEY:
+      convert:
+        source: $VARNAME
+        toCase: snakeCase
+  fix: "{$KEY,$VARNAME}"

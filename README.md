@@ -1,13 +1,15 @@
 tuplelog
 =====
 
-A collection of macros and optional log formatter for the logger application that allows the use of tuples in log statements to provide both human readable and structured logging in one statement.  Works along with other log formatters (like flatlog, logger_formatter_json) to provide structured logging.
+A collection of macros for the logger application that allows the use of tuples in log statements to provide both human readable and structured logging in one statement.  Works along with other log formatters (like flatlog, logger_formatter_json) to provide structured logging.
 
 Why?
 ----
+There is valid use for both structured logging and user scannable logs.
+So why not do both?
 
 Structured logging has huge advantages over human readable logs, mainly so log analysis tools like
-ElasticSearch can be used, but there are disadvantages also.
+ElasticSearch can query logs like a real database, but there are disadvantages also.
 Human readable logs include the context - the relationship between different data that can be
 more difficult to understand in structured logging.  
 
@@ -29,8 +31,13 @@ knowledge of what these logs actually mean.  tuple logs also allow the logging o
 
 You could, for example, set up multiple handlers for:
 
-- Structured logs, which are not stored locally, but are streamed to a log storage and analysis systems (like ELK)
+- Structured logs, which are not stored locally, but are streamed to a log storage and analysis systems (like ELK): https://github.com/zotonic/logstasher
 - Human readable logs that only exist locally, allowing local tailing
+
+Structured Logging Tips
+----
+1) Use consistent naming of variables across functions: HostKey, host_key, hostkey, Key (pick one).
+This will allow you to query the same data across multiple log statements.
 
 
 Usage
@@ -133,7 +140,7 @@ https://github.com/WhatsApp/tree-sitter-erlang
 4) Run this in your source directory: 
 
 ```bash
-ast-grep scan -r $REPO_LOCATION/ast-grep/log_fix.yaml -U
+ast-grep scan -r $REPO_LOCATION/sripts/log_fix.yaml -U
 ```
 
 5) You will need to include tuplelog.hrl anywhere you are currently including logger.hrl to get
@@ -142,7 +149,7 @@ access to the LOGT macros:
 ```bash
 sed -i 's/\-include_lib(\"kernel\/include\/logger.hrl\")\./-include_lib\(\"kernel\/include\/logger.hrl\"\)\.\n-include_lib\(\"tuplelog/include/tuplelog.hrl\"\)\./g' *.erl
 
-grep -c dog_trainer.hrl *.erl | grep ":2"
+grep -c tuplelog.hrl *.erl | grep ":2"
 ```
 
 Credits
@@ -158,3 +165,32 @@ Changelog
 ---------
 
 - 0.1.0: %TODO
+
+EXTRA
+----
+1) Use a macro to log a io:format string with a list of key/value tuples as data instead of a list
+of variables:
+    Test = "Rest",
+    
+    this:
+    ?LOG_FORMAT("This is a test: ~s", [Test]).
+    produces this:
+    "This is a Rest"
+
+    using tuplelog:
+    ?LOGT_FORMAT("Thist is a test: ~s",[{test,Test}]).
+    produces this:
+    #{unstructured_log => "This is a Rest", template_log => "This is a $test", test => "Rest"}
+    which is formatted by two different log formatters:
+
+
+2) This creates a Map of key/values and adds two keys: template_log and unstructured_log.
+unstructured_log is the log statememt with the value of the variables
+template_log is the log statement with the name of the variables prepended with $.
+
+
+1) Can do both structured and human scannable logs by converting all logs to key=>values, and then
+using log formatters to format them locally for viewing and remotely for ELK consumption.
+2) Use an ordered list of key values in logging statements to provide both structured and human
+scannable logs.
+3) Nice to log the log statement to provide a human comprehensible link between the human scannable and structured logs: template_log.
